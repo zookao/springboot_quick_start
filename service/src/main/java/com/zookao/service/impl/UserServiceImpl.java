@@ -57,6 +57,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!userRegister.getPassword().equals(requestJson.getString("rePassword"))) {
             throw new BusinessException(CodeEnum.INVALID_RE_PASSWORD.getMsg(), CodeEnum.INVALID_RE_PASSWORD.getCode());
         }
+        User check = this.getOne(new QueryWrapper<User>().eq("username", userRegister.getUsername()));
+        if(check != null){
+            throw new BusinessException(CodeEnum.INVALID_USER_EXIST.getMsg());
+        }
         userRegister.setPassword(BCrypt.hashpw(requestJson.getString("password"), BCrypt.gensalt()));
         User registerUser = this.register(userRegister, Constant.RoleType.ADMIN);
         //默认注册普通用户
@@ -70,7 +74,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (result) {
             Role role = roleService.getOne(new QueryWrapper<Role>().eq("name", roleName));
             if (role == null) {
-                throw new BusinessException(CodeEnum.INVALID_ROLE.getMsg(), CodeEnum.INVALID_ROLE.getCode());
+                throw new BusinessException(CodeEnum.INVALID_ROLE.getMsg());
             }
             UserToRole userToRole = new UserToRole();
             userToRole.setUserId(user.getId());
