@@ -1,5 +1,6 @@
 package com.zookao.admin.shiro;
 
+import com.zookao.common.base.CodeEnum;
 import com.zookao.common.base.Constant;
 import com.zookao.common.util.ComUtil;
 import com.zookao.common.util.JWTUtil;
@@ -7,6 +8,8 @@ import com.zookao.persistence.entity.Menu;
 import com.zookao.persistence.entity.User;
 import com.zookao.persistence.entity.UserToRole;
 import com.zookao.service.*;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -24,11 +27,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 public class MyRealm extends AuthorizingRealm {
     private UserService userService;
     private UserToRoleService userToRoleService;
     private MenuService menuService;
     private RoleService roleService;
+    private RedisService redisService;
 
     @Override
     public boolean supports(AuthenticationToken token) {
@@ -38,6 +43,7 @@ public class MyRealm extends AuthorizingRealm {
     /**
      * 只有当需要检测用户权限的时候才会调用此方法，例如checkRole,checkPermission之类的
      */
+    @SneakyThrows
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         if (userService == null) {
@@ -52,22 +58,34 @@ public class MyRealm extends AuthorizingRealm {
         if (roleService == null) {
             this.roleService = SpringContextBeanService.getBean(RoleService.class);
         }
+        if (redisService == null) {
+            this.redisService = SpringContextBeanService.getBean(RedisService.class);
+        }
 
-        Integer userId = JWTUtil.getUserId(principals.toString());
-        User user = userService.getById(userId);
         SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
-        if (null != user) {
-            UserToRole userToRole = userToRoleService.selectByUserId(user.getId());
-            //控制菜单级别按钮  类中用@RequiresPermissions("user:list") 对应数据库中code字段来控制controller
-            ArrayList<String> pers = new ArrayList<>();
-            List<Menu> menuList = menuService.findMenuByRoleId(userToRole.getRoleId());
-            for (Menu per : menuList) {
-                if (!ComUtil.isEmpty(per.getCode())) {
-                    pers.add(String.valueOf(per.getCode()));
+        Integer userId = JWTUtil.getUserId(principals.toString());
+        List<String> list = redisService.getList(principals.toString(), String.class);
+        if (list == null) {
+            log.info("未走缓存");
+            User user = userService.getById(userId);
+            if (null != user) {
+                UserToRole userToRole = userToRoleService.selectByUserId(user.getId());
+                //控制菜单级别按钮  类中用@RequiresPermissions("user:list") 对应数据库中code字段来控制controller
+                ArrayList<String> pers = new ArrayList<>();
+                List<Menu> menuList = menuService.findMenuByRoleId(userToRole.getRoleId());
+                for (Menu per : menuList) {
+                    if (!ComUtil.isEmpty(per.getCode())) {
+                        pers.add(String.valueOf(per.getCode()));
+                    }
                 }
+                Set<String> permission = new HashSet<>(pers);
+                //redis保存该token的权限
+                redisService.setList(principals.toString(),new ArrayList<String>(permission));
+                simpleAuthorizationInfo.addStringPermissions(permission);
             }
-            Set<String> permission = new HashSet<>(pers);
-            simpleAuthorizationInfo.addStringPermissions(permission);
+        }else{
+            log.info("走缓存");
+            simpleAuthorizationInfo.addStringPermissions(list);
         }
         return simpleAuthorizationInfo;
     }
@@ -75,10 +93,14 @@ public class MyRealm extends AuthorizingRealm {
     /**
      * 默认使用此方法进行用户名正确与否验证，错误抛出异常即可。
      */
+    @SneakyThrows
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken auth) throws AuthenticationException {
         if (userService == null) {
             this.userService = SpringContextBeanService.getBean(UserService.class);
+        }
+        if (redisService == null) {
+            this.redisService = SpringContextBeanService.getBean(RedisService.class);
         }
         String token = (String) auth.getCredentials();
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
@@ -89,14 +111,19 @@ public class MyRealm extends AuthorizingRealm {
         // 解密获得username，用于和数据库进行对比
         Integer userId = JWTUtil.getUserId(token);
         if (userId == null) {
-            throw new AuthenticationException("token invalid");
+            throw new AuthenticationException(CodeEnum.INVALID_TOKEN.getMsg());
+        }
+        String redisToken = redisService.get(userId.toString());
+        if(!redisToken.equalsIgnoreCase(token)){
+            redisService.del(token); //删除redis保存的该token的权限
+            throw new AuthenticationException(CodeEnum.INVALID_TOKEN.getMsg());
         }
         User userBean = userService.getById(userId);
         if (userBean == null) {
-            throw new AuthenticationException("User didn't existed!");
+            throw new AuthenticationException(CodeEnum.INVALID_USER.getMsg());
         }
         if (!JWTUtil.verify(token, userId, userBean.getPassword())) {
-            throw new AuthenticationException("Username or password error");
+            throw new AuthenticationException(CodeEnum.INVALID_USERNAME_PASSWORD.getMsg());
         }
         return new SimpleAuthenticationInfo(token, token, this.getName());
     }

@@ -22,7 +22,7 @@ public interface UserService extends IService<User> {
 
     Map<String, Object> checkUsernameAndPassword(JSONObject requestJson) throws Exception;
 
-    Map<String, Object> getLoginUserAndMenuInfo(User user);
+    Map<String, Object> getLoginUserAndMenuInfo(User user) throws Exception;
 
     List<User> getAdminList(Integer page);
 

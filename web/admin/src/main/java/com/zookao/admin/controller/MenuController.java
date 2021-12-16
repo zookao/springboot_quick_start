@@ -42,7 +42,7 @@ public class MenuController {
 
     @ApiOperation(value = "添加菜单", produces = "application/json")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "requestJson", example = "{\"parent_id\":\"0\",\"code\":\"admin:index\",\"name\":\"用户管理\",\"sort\":\"0\",\"type\":\"1\"}", required = true, dataType = "String", paramType = "body")
+            @ApiImplicitParam(name = "requestJson", example = "{\"parent_id\":\"0\",\"code\":\"admin:index\",\"name\":\"用户管理\",\"sort\":\"0\",\"type\":\"1\"}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
     })
     @PostMapping("/add")
     @Log(action = "add", modelName = "Menu", description = "添加菜单")
@@ -60,7 +60,7 @@ public class MenuController {
 
     @ApiOperation(value = "删除", produces = "application/json")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "requestJson", example = "{\"id\":\"1\"}", required = true, dataType = "String", paramType = "body")
+            @ApiImplicitParam(name = "requestJson", example = "{\"id\":\"1\"}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
     })
     @PostMapping("/delete")
     @Log(action = "delete", modelName = "Menu", description = "删除")

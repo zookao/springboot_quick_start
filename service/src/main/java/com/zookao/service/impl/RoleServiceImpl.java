@@ -55,7 +55,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     public Boolean deleteOneRole(JSONObject requestJson) throws BusinessException {
         Integer roleId = requestJson.getInteger("id");
         if (ComUtil.isEmpty(this.getById(roleId))) {
-            throw new BusinessException("角色不存在");
+            throw new BusinessException(CodeEnum.INVALID_ROLE.getMsg(), CodeEnum.INVALID_ROLE.getCode());
         }
         if(!ComUtil.isEmpty(userToRoleService.list(new QueryWrapper<UserToRole>().eq("role_id", roleId)))){
             throw new BusinessException("删除失败，角色已绑定管理员，请先处理");

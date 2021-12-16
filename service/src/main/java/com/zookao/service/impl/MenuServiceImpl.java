@@ -67,7 +67,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
             boolean result = this.save(menu);
             return menu;
         }else{
-            throw new BusinessException(CodeEnum.PARAM_ERROR.getMsg(), CodeEnum.PARAM_ERROR.getCode());
+            throw new BusinessException(CodeEnum.PARAM_ERROR.getMsg());
         }
     }
 

@@ -43,7 +43,7 @@ public class UserController {
     @ApiOperation(value = "添加管理员", produces = "application/json")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "requestJson", example = "{\"username\":\"admin\",\"mobile\":\"13888888888\",</br>" +
-                    "\"password\":\"123456\",\"rePassword\":\"123456\",\"email\":\"zookao@126.com\"}", required = true, dataType = "String", paramType = "body")
+                    "\"password\":\"123456\",\"rePassword\":\"123456\",\"email\":\"zookao@126.com\"}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
     })
     @PostMapping("/add")
     @Log(action = "add", modelName = "User", description = "添加管理员")
@@ -64,7 +64,7 @@ public class UserController {
 
     @ApiOperation(value = "用户绑定角色", notes = "", produces = "application/json")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "requestJson", example = "{\"userId\":\"1\",\"roleId\":\"1\"}", required = true, dataType = "String", paramType = "body")
+            @ApiImplicitParam(name = "requestJson", example = "{\"userId\":\"1\",\"roleId\":\"1\"}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
     })
     @PostMapping("/user-to-role")
     @Log(action = "userToRole", modelName = "User", description = "用户绑定角色")
@@ -76,7 +76,7 @@ public class UserController {
 
     @ApiOperation(value = "登录", notes = "", produces = "application/json")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "requestJson", example = "{\"username\":\"admin\",\"password\":\"111111\"}", required = true, dataType = "String", paramType = "body")
+            @ApiImplicitParam(name = "requestJson", example = "{\"username\":\"admin\",\"password\":\"111111\"}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
     })
     @PostMapping("/login")
     @Log(action = "login", modelName = "User", description = "后台登录")
@@ -88,7 +88,7 @@ public class UserController {
 
     @ApiOperation(value = "删除", produces = "application/json")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "requestJson", example = "{\"id\":\"1\"}", required = true, dataType = "String", paramType = "body")
+            @ApiImplicitParam(name = "requestJson", example = "{\"id\":\"1\"}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
     })
     @PostMapping("/delete")
     @Log(action = "delete", modelName = "User", description = "删除")

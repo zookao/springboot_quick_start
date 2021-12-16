@@ -40,7 +40,7 @@ public class RoleController {
 
     @ApiOperation(value = "添加角色", produces = "application/json")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "requestJson", example = "{\"name\":\"角色名\"}", required = true, dataType = "String", paramType = "body")
+            @ApiImplicitParam(name = "requestJson", example = "{\"name\":\"角色名\"}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
     })
     @PostMapping("/add")
     @Log(action = "add", modelName = "Role", description = "添加角色")
@@ -58,7 +58,7 @@ public class RoleController {
 
     @ApiOperation(value = "角色绑定权限", notes = "", produces = "application/json")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "requestJson", example = "{\"roleId\":\"1\",\"menuId\":[\"1\",\"2\"]}", required = true, dataType = "String", paramType = "body")
+            @ApiImplicitParam(name = "requestJson", example = "{\"roleId\":\"1\",\"menuId\":[\"1\",\"2\"]}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
     })
     @PostMapping("/role-to-menu")
     @Log(action = "roleToMenu", modelName = "Role", description = "角色绑定权限")
@@ -70,7 +70,7 @@ public class RoleController {
 
     @ApiOperation(value = "删除", produces = "application/json")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "requestJson", example = "{\"id\":\"1\"}", required = true, dataType = "String", paramType = "body")
+            @ApiImplicitParam(name = "requestJson", example = "{\"id\":\"1\"}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
     })
     @PostMapping("/delete")
     @Log(action = "delete", modelName = "Role", description = "删除")

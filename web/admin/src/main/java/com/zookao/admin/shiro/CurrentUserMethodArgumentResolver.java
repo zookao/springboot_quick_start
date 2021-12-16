@@ -2,6 +2,7 @@ package com.zookao.admin.shiro;
 
 import com.zookao.admin.annotation.CurrentUser;
 import com.zookao.common.base.BusinessException;
+import com.zookao.common.base.CodeEnum;
 import com.zookao.persistence.entity.User;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
@@ -26,7 +27,7 @@ public class CurrentUserMethodArgumentResolver implements HandlerMethodArgumentR
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
         User user = (User) webRequest.getAttribute("currentUser", RequestAttributes.SCOPE_REQUEST);
         if (user == null) {
-            throw new BusinessException("获取用户信息失败");
+            throw new BusinessException(CodeEnum.INVALID_USER.getMsg(), CodeEnum.INVALID_USER.getCode());
         }
         return user;
     }

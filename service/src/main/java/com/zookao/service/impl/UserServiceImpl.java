@@ -16,10 +16,7 @@ import com.zookao.persistence.entity.Role;
 import com.zookao.persistence.entity.User;
 import com.zookao.persistence.entity.UserToRole;
 import com.zookao.persistence.mapper.UserMapper;
-import com.zookao.service.MenuService;
-import com.zookao.service.RoleService;
-import com.zookao.service.UserService;
-import com.zookao.service.UserToRoleService;
+import com.zookao.service.*;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,11 +35,13 @@ import java.util.Map;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     @Autowired
-    UserToRoleService userToRoleService;
+    private UserToRoleService userToRoleService;
     @Autowired
-    RoleService roleService;
+    private RoleService roleService;
     @Autowired
-    MenuService menuService;
+    private MenuService menuService;
+    @Autowired
+    private RedisService redisService;
 
     @Override
     public User checkAndRegisterUser(JSONObject requestJson) throws Exception {
@@ -96,11 +95,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public Map<String, Object> getLoginUserAndMenuInfo(User user) {
+    public Map<String, Object> getLoginUserAndMenuInfo(User user) throws Exception {
         Map<String, Object> result = new HashMap<>();
         UserToRole userToRole = userToRoleService.selectByUserId(user.getId());
-        user.setToken(JWTUtil.sign(user.getId(), user.getPassword()));
+        String token = JWTUtil.sign(user.getId(), user.getPassword());
+        user.setToken(token);
         result.put("user", user);
+        redisService.set(user.getId().toString(),token);
         //根据角色主键查询启用的菜单权限
         List<Menu> menuList = menuService.findMenuByRoleId(userToRole.getRoleId());
         List<Menu> retMenuList = menuService.treeMenuList(Constant.ROOT_MENU, menuList);
@@ -121,7 +122,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Integer userId = requestJson.getInteger("id");
         User user = this.getById(userId);
         if (ComUtil.isEmpty(user)) {
-            throw new BusinessException("管理员不存在");
+            throw new BusinessException(CodeEnum.INVALID_USER.getMsg(), CodeEnum.INVALID_USER.getCode());
         }
         userToRoleService.remove(new QueryWrapper<UserToRole>().eq("user_id",userId));
         return this.removeById(userId);
