@@ -80,10 +80,11 @@ public class MyRealm extends AuthorizingRealm {
                 }
                 Set<String> permission = new HashSet<>(pers);
                 //redis保存该token的权限
-                redisService.setList(principals.toString(),new ArrayList<String>(permission));
+                redisService.setList(principals.toString(), new ArrayList<String>(permission));
+                redisService.expire(principals.toString(), JWTUtil.EXPIRE_TIME);
                 simpleAuthorizationInfo.addStringPermissions(permission);
             }
-        }else{
+        } else {
             log.info("走缓存");
             simpleAuthorizationInfo.addStringPermissions(list);
         }
@@ -114,7 +115,7 @@ public class MyRealm extends AuthorizingRealm {
             throw new AuthenticationException(CodeEnum.INVALID_TOKEN.getMsg());
         }
         String redisToken = redisService.get(userId.toString());
-        if(!redisToken.equalsIgnoreCase(token)){
+        if (!redisToken.equalsIgnoreCase(token)) {
             redisService.del(token); //删除redis保存的该token的权限
             throw new AuthenticationException(CodeEnum.INVALID_TOKEN.getMsg());
         }

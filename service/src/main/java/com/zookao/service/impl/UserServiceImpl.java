@@ -57,7 +57,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(CodeEnum.INVALID_RE_PASSWORD.getMsg(), CodeEnum.INVALID_RE_PASSWORD.getCode());
         }
         User check = this.getOne(new QueryWrapper<User>().eq("username", userRegister.getUsername()));
-        if(check != null){
+        if (check != null) {
             throw new BusinessException(CodeEnum.INVALID_USER_EXIST.getMsg());
         }
         userRegister.setPassword(BCrypt.hashpw(requestJson.getString("password"), BCrypt.gensalt()));
@@ -101,7 +101,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String token = JWTUtil.sign(user.getId(), user.getPassword());
         user.setToken(token);
         result.put("user", user);
-        redisService.set(user.getId().toString(),token);
+        redisService.set(user.getId().toString(), token);
+        redisService.expire(user.getId().toString(), JWTUtil.EXPIRE_TIME);
         //根据角色主键查询启用的菜单权限
         List<Menu> menuList = menuService.findMenuByRoleId(userToRole.getRoleId());
         List<Menu> retMenuList = menuService.treeMenuList(Constant.ROOT_MENU, menuList);
@@ -124,7 +125,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (ComUtil.isEmpty(user)) {
             throw new BusinessException(CodeEnum.INVALID_USER.getMsg(), CodeEnum.INVALID_USER.getCode());
         }
-        userToRoleService.remove(new QueryWrapper<UserToRole>().eq("user_id",userId));
+        userToRoleService.remove(new QueryWrapper<UserToRole>().eq("user_id", userId));
         return this.removeById(userId);
     }
 }
