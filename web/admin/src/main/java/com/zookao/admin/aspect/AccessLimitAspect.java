@@ -33,7 +33,7 @@ public class AccessLimitAspect extends AbstractAspectManager {
     }
 
     //添加速率.保证是单例的
-    private static RateLimiter rateLimiter = RateLimiter.create(1000);
+    // private static RateLimiter rateLimiter;
     //使用url做为key,存放令牌桶 防止每次重新创建令牌桶
     private static Map<String, RateLimiter> limitMap = Maps.newConcurrentMap();
 
@@ -45,11 +45,11 @@ public class AccessLimitAspect extends AbstractAspectManager {
         String url = request.getRequestURI();
         if (!limitMap.containsKey(url)) {
             // 创建令牌桶
-            rateLimiter = RateLimiter.create(lxRateLimit.perSecond());
+            RateLimiter rateLimiter = RateLimiter.create(lxRateLimit.perSecond());
             limitMap.put(url, rateLimiter);
             log.info("<<=================  请求{},创建令牌桶,容量{} 成功!!!", url, lxRateLimit.perSecond());
         }
-        rateLimiter = limitMap.get(url);
+        RateLimiter rateLimiter = limitMap.get(url);
         if (!rateLimiter.tryAcquire(lxRateLimit.timeOut(), lxRateLimit.timeOutUnit())) {//获取令牌
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             log.info("Error ---时间:{},获取令牌失败.", sdf.format(new Date()));
