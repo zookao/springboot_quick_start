@@ -10,6 +10,7 @@ import com.zookao.service.RoleToMenuService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.shiro.util.Assert;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +26,7 @@ import java.util.List;
 public class RoleToMenuServiceImpl extends ServiceImpl<RoleToMenuMapper, RoleToMenu> implements RoleToMenuService {
 
     @Override
+    @Transactional
     public Boolean binds(JSONObject requestJson) {
         Integer roleId = requestJson.getInteger("roleId");
         JSONArray menuIds = requestJson.getJSONArray("menuId");

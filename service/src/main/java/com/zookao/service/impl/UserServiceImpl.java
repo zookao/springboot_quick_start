@@ -20,6 +20,7 @@ import com.zookao.service.*;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +45,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private RedisService redisService;
 
     @Override
+    @Transactional
     public User checkAndRegisterUser(JSONObject requestJson) throws Exception {
         //可直接转为java对象,简化操作,不用再set一个个属性
         User userRegister = requestJson.toJavaObject(User.class);
