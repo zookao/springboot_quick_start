@@ -5,6 +5,7 @@ import com.zookao.admin.helper.ResponseHelper;
 import com.zookao.admin.helper.ResponseModel;
 import com.zookao.common.base.BusinessException;
 import com.zookao.common.base.CodeEnum;
+import com.zookao.common.util.ComUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.ShiroException;
 import org.apache.shiro.authc.AuthenticationException;
@@ -106,7 +107,11 @@ public class AllControllerAdvice {
     public ResponseModel<String> errorHandler(Exception ex) {
         ex.printStackTrace();
         log.error("接口出现严重异常：{}", ex.getMessage());
-        return ResponseHelper.failed2Message(CodeEnum.ERROR.getMsg());
+        if(ComUtil.isEmpty(ex.getMessage())){
+            return ResponseHelper.failed2Message(CodeEnum.ERROR.getMsg());
+        }else{
+            return ResponseHelper.failed2Message(ex.getMessage());
+        }
     }
 
 }

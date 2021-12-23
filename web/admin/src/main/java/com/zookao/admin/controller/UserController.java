@@ -1,6 +1,9 @@
 package com.zookao.admin.controller;
 
 
+import cn.hutool.captcha.CaptchaUtil;
+import cn.hutool.captcha.ShearCaptcha;
+import cn.hutool.captcha.generator.MathGenerator;
 import com.alibaba.fastjson.JSONObject;
 import com.zookao.admin.annotation.AccessLimit;
 import com.zookao.admin.annotation.Log;
@@ -8,8 +11,10 @@ import com.zookao.admin.annotation.Pass;
 import com.zookao.admin.annotation.ValidationParam;
 import com.zookao.admin.helper.ResponseHelper;
 import com.zookao.admin.helper.ResponseModel;
+import com.zookao.persistence.entity.Captcha;
 import com.zookao.persistence.entity.User;
 import com.zookao.persistence.entity.UserToRole;
+import com.zookao.service.RedisService;
 import com.zookao.service.UserService;
 import com.zookao.service.UserToRoleService;
 import io.swagger.annotations.Api;
@@ -17,11 +22,14 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -30,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  * @author zookao
  * @since 2021-12-14
  */
-@Api(tags="管理员接口")
+@Api(tags = "管理员接口")
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -39,11 +47,13 @@ public class UserController {
     private UserService userService;
     @Autowired
     private UserToRoleService userToRoleService;
+    @Autowired
+    private RedisService redisService;
 
     @ApiOperation(value = "添加管理员", produces = "application/json")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "requestJson", example = "{\"username\":\"admin\",\"mobile\":\"13888888888\",</br>" +
-                    "\"password\":\"123456\",\"rePassword\":\"123456\",\"email\":\"zookao@126.com\"}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
+                    "\"password\":\"123456\",\"rePassword\":\"123456\",\"email\":\"zookao@126.com\"}", required = true, dataType = "String", paramType = "body", dataTypeClass = String.class)
     })
     @PostMapping("/add")
     @Log(action = "add", modelName = "User", description = "添加管理员")
@@ -56,15 +66,15 @@ public class UserController {
     @ApiOperation(value = "管理员列表")
     @GetMapping("/index")
     @RequiresPermissions("admin:index")
-     //每x秒往令牌桶里放y个令牌，即1秒10个请求
-    @AccessLimit(perSecond=10,timeOut = 1,timeOutUnit = TimeUnit.SECONDS)
-    public ResponseModel<List<User>> index(@RequestParam(value = "page",defaultValue = "1") Integer page){
+    //每x秒往令牌桶里放y个令牌，即1秒10个请求
+    @AccessLimit(perSecond = 10, timeOut = 1, timeOutUnit = TimeUnit.SECONDS)
+    public ResponseModel<List<User>> index(@RequestParam(value = "page", defaultValue = "1") Integer page) {
         return ResponseHelper.succeed(userService.getAdminList(page));
     }
 
     @ApiOperation(value = "用户绑定角色", notes = "", produces = "application/json")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "requestJson", example = "{\"userId\":\"1\",\"roleId\":\"1\"}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
+            @ApiImplicitParam(name = "requestJson", example = "{\"userId\":\"1\",\"roleId\":\"1\"}", required = true, dataType = "String", paramType = "body", dataTypeClass = String.class)
     })
     @PostMapping("/user-to-role")
     @Log(action = "userToRole", modelName = "User", description = "用户绑定角色")
@@ -74,21 +84,40 @@ public class UserController {
         return ResponseHelper.succeed(userToRoleService.bind(requestJson));
     }
 
+    @ApiOperation(value = "登录验证码", notes = "", produces = "application/json")
+    @GetMapping("/login/captcha")
+    @Pass
+    public ResponseModel<Captcha> captcha(HttpServletResponse response) throws Exception {
+        ShearCaptcha captcha = CaptchaUtil.createShearCaptcha(140, 35, 2, 4);
+        captcha.setGenerator(new MathGenerator(1));
+        // response.setContentType("image/jpeg");
+        // response.setHeader("Pragma", "No-cache");
+        // captcha.write(response.getOutputStream());
+        // response.getOutputStream().close();
+        String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+        String imageBase64 = captcha.getImageBase64Data();
+        String code = captcha.getCode();
+        redisService.set(uuid,code);
+        redisService.expire(uuid,600);
+        Captcha image = Captcha.builder().uuid(uuid).imageBase64(imageBase64).build();
+        return ResponseHelper.succeed(image);
+    }
+
     @ApiOperation(value = "登录", notes = "", produces = "application/json")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "requestJson", example = "{\"username\":\"admin\",\"password\":\"111111\"}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
+            @ApiImplicitParam(name = "requestJson", example = "{\"username\":\"admin\",\"password\":\"111111\",\"uuid\":\"438546944fe24dbb80dcd77106a50cd6\",\"code\":\"2\"}", required = true, dataType = "String", paramType = "body", dataTypeClass = String.class)
     })
     @PostMapping("/login")
     @Log(action = "login", modelName = "User", description = "后台登录")
     @Pass
     public ResponseModel<Map<String, Object>> login(
-            @ValidationParam("username,password") @RequestBody JSONObject requestJson) throws Exception {
+            @ValidationParam("username,password,uuid,code") @RequestBody JSONObject requestJson) throws Exception {
         return ResponseHelper.succeed(userService.checkUsernameAndPassword(requestJson));
     }
 
     @ApiOperation(value = "删除", produces = "application/json")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "requestJson", example = "{\"id\":\"1\"}", required = true, dataType = "String", paramType = "body",dataTypeClass = String.class)
+            @ApiImplicitParam(name = "requestJson", example = "{\"id\":\"1\"}", required = true, dataType = "String", paramType = "body", dataTypeClass = String.class)
     })
     @PostMapping("/delete")
     @Log(action = "delete", modelName = "User", description = "删除")

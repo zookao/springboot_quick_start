@@ -13,7 +13,8 @@ public enum CodeEnum {
     INVALID_USER_EXIST("20008", "用户已存在"),
     INVALID_ROLE("20009", "角色不存在"),
     MOBILE_ERROR("20010", "手机号格式错误"),
-    INVALID_TOKEN("20011","令牌无效");
+    INVALID_TOKEN("20011","令牌无效"),
+    INVALID_CAPTCHA("20012","验证码不正确");
 
     private String respCode;
     private String respMsg;

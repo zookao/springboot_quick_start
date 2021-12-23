@@ -13,9 +13,10 @@ import org.springframework.stereotype.Component;
 /**
  * User: zookao
  * Date: 2021-12-20
+ * 去掉注解使用
  */
-@Component
-@EnableScheduling
+// @Component
+// @EnableScheduling
 public class RocketmqProducer {
 
     @Autowired

@@ -1,5 +1,6 @@
 package com.zookao.service.impl;
 
+import cn.hutool.captcha.generator.MathGenerator;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -21,6 +22,7 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import java.util.HashMap;
 import java.util.List;
@@ -87,6 +89,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Map<String, Object> checkUsernameAndPassword(JSONObject requestJson) throws Exception {
+        String redisCode = redisService.get(requestJson.getString("uuid"));
+        Assert.isTrue(new MathGenerator().verify(redisCode,requestJson.getString("code")),CodeEnum.INVALID_CAPTCHA.getMsg());
+        redisService.del(requestJson.getString("uuid"));
         //@ValidationParam注解已经验证过mobile和passWord参数，所以可以直接使用
         String username = requestJson.getString("username");
         User user = this.getOne(new QueryWrapper<User>().eq("username", username));

@@ -9,10 +9,11 @@ import org.springframework.stereotype.Component;
  * 注意：Consumer里抛出异常才会重试，所以使用者不要把Consumer里的整个代码try-catch
  * User: zookao
  * Date: 2021-12-20
+ * 去掉注解使用
  */
 @Slf4j
-@Component
-@RocketMQMessageListener(topic = "test_producer", consumerGroup = "admin")
+// @Component
+// @RocketMQMessageListener(topic = "test_producer", consumerGroup = "admin")
 public class RocketmqConsumer implements RocketMQListener<String> {
 
     @Override
