@@ -16,7 +16,6 @@ import lombok.*;
 @AllArgsConstructor
 @ApiModel(value = "验证码对象")
 public class Captcha {
-
     private String uuid;
     private String code;
     private String imageBase64;
