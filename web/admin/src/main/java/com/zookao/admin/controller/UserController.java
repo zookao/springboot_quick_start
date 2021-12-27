@@ -1,9 +1,6 @@
 package com.zookao.admin.controller;
 
 
-import cn.hutool.captcha.CaptchaUtil;
-import cn.hutool.captcha.ShearCaptcha;
-import cn.hutool.captcha.generator.MathGenerator;
 import com.alibaba.fastjson.JSONObject;
 import com.zookao.admin.annotation.AccessLimit;
 import com.zookao.admin.annotation.Log;
@@ -14,6 +11,7 @@ import com.zookao.admin.helper.ResponseModel;
 import com.zookao.persistence.entity.Captcha;
 import com.zookao.persistence.entity.User;
 import com.zookao.persistence.entity.UserToRole;
+import com.zookao.service.CaptchaService;
 import com.zookao.service.RedisService;
 import com.zookao.service.UserService;
 import com.zookao.service.UserToRoleService;
@@ -22,14 +20,12 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,6 +45,8 @@ public class UserController {
     private UserToRoleService userToRoleService;
     @Autowired
     private RedisService redisService;
+    @Autowired
+    private CaptchaService captchaService;
 
     @ApiOperation(value = "添加管理员", produces = "application/json")
     @ApiImplicitParams({
@@ -88,19 +86,7 @@ public class UserController {
     @GetMapping("/login/captcha")
     @Pass
     public ResponseModel<Captcha> captcha(HttpServletResponse response) throws Exception {
-        ShearCaptcha captcha = CaptchaUtil.createShearCaptcha(140, 35, 2, 4);
-        captcha.setGenerator(new MathGenerator(1));
-        // response.setContentType("image/jpeg");
-        // response.setHeader("Pragma", "No-cache");
-        // captcha.write(response.getOutputStream());
-        // response.getOutputStream().close();
-        String uuid = UUID.randomUUID().toString().replaceAll("-", "");
-        String imageBase64 = captcha.getImageBase64Data();
-        String code = captcha.getCode();
-        redisService.set(uuid,code);
-        redisService.expire(uuid,600);
-        Captcha image = Captcha.builder().uuid(uuid).imageBase64(imageBase64).build();
-        return ResponseHelper.succeed(image);
+        return ResponseHelper.succeed(captchaService.generate());
     }
 
     @ApiOperation(value = "登录", notes = "", produces = "application/json")

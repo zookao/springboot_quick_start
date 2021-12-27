@@ -45,6 +45,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private MenuService menuService;
     @Autowired
     private RedisService redisService;
+    @Autowired
+    private CaptchaService captchaService;
 
     @Override
     @Transactional
@@ -89,8 +91,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Map<String, Object> checkUsernameAndPassword(JSONObject requestJson) throws Exception {
-        String redisCode = redisService.get(requestJson.getString("uuid"));
-        Assert.isTrue(new MathGenerator().verify(redisCode,requestJson.getString("code")),CodeEnum.INVALID_CAPTCHA.getMsg());
+        Assert.isTrue(captchaService.verify(redisService.get(requestJson.getString("uuid")),requestJson.getString("code")),CodeEnum.INVALID_CAPTCHA.getMsg());
         redisService.del(requestJson.getString("uuid"));
         //@ValidationParam注解已经验证过mobile和passWord参数，所以可以直接使用
         String username = requestJson.getString("username");
