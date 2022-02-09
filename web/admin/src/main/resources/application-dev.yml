@@ -1,0 +1,54 @@
+logging:
+    config: classpath:log4j2.xml
+    level:
+        root: DEBUG
+mybatis-plus:
+    mapper-locations: classpath:/com/zookao/persistence/mapper/xml/*Mapper.xml
+    typeAliasesPackage: com.zookao.persistencce.entity
+rocketmq:
+    name-server: 192.168.56.102:9876
+    producer:
+        group: admin
+server:
+    port: 88
+    tomcat:
+        uri-encoding: UTF-8
+spring:
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        druid:
+            filter:
+                stat:
+                    enabled: true
+                    log-slow-sql: true
+                    slow-sql-millis: 1000
+                wall:
+                    config:
+                        drop-table-allow: false
+                    enabled: true
+            filters: stat,wall,slf4j
+            initialSize: 5
+            maxActive: 20
+            minIdle: 5
+            stat-view-servlet:
+                enabled: true
+            web-stat-filter:
+                enabled: true
+                exclusions: '"*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"'
+                url-pattern: /*
+        password: root
+        type: com.alibaba.druid.pool.DruidDataSource
+        url: jdbc:mysql://192.168.56.102:3306/quick_start?useUnicode=true&characterEncoding=utf8&useSSL=false
+        username: root
+    redis:
+        client-type: jedis
+        database: 0
+        host: 192.168.56.102
+        jedis:
+            pool:
+                max-active: 8
+                max-idle: 8
+                max-wait: -1ms
+                min-idle: 0
+        password: 111111
+        port: 6379
