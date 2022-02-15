@@ -29,7 +29,7 @@ public class MpGenerator {
                             .build(); // 设置mapperXml生成路径
                 })
                 .strategyConfig(builder -> {
-                    builder.addInclude("qs_menu", "qs_operation_log", "qs_role", "qs_role_to_menu", "qs_user", "qs_user_to_role") // 设置需要生成的表名
+                    builder.addInclude("qs_menu", "qs_operation_log", "qs_role", "qs_role_to_menu", "qs_user", "qs_user_to_role","cnarea_2020") // 设置需要生成的表名
                             .addTablePrefix("qs_")
                             .entityBuilder()
                             .enableLombok()
