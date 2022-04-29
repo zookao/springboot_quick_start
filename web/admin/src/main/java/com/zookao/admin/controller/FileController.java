@@ -54,6 +54,23 @@ public class FileController {
         return ResponseHelper.succeed(null);
     }
 
+    /**
+     *  ServletOutputStream os = response.getOutputStream();
+        File fileDownLoad;
+        ClassPathResource classpathResource = new ClassPathResource(fileDownLoad);
+        InputStream is = classpathResource.getInputStream();
+        int read;
+        byte[] bytes = new byte[2048];
+        while((read = is.read(bytes))!=-1){
+            os.write(bytes, 0, read);
+        }
+        os.flush();
+        is.close();
+     * @param fileName
+     * @param response
+     * @return
+     * @throws FileNotFoundException
+     */
     @ApiOperation(value = "文件下载", notes = "", produces = "application/json")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "file", example = "1.png", required = true, dataType = "String", paramType = "query",dataTypeClass = String.class)
